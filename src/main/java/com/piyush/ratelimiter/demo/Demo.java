@@ -30,7 +30,13 @@ public class Demo {
             return daemon;
         });
 
-        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry, evictionScheduler, Duration.ofMinutes(1).toNanos(), Algorithm.FIXED_WINDOW);
+        RateLimiterService rateLimiterService = RateLimiterService.builder()
+                                                        .ruleRegistry(rateLimitRuleRegistry)
+                                                        .limiterRegistry(limiterRegistry)
+                                                        .evictionScheduler(evictionScheduler)
+                                                        .evictionIntervalInNanos(Duration.ofMinutes(1).toNanos())
+                                                        .algorithm(Algorithm.FIXED_WINDOW)
+                                                        .build();
 
         for (int i = 0; i < 15; i++) {
             try{

@@ -60,4 +60,53 @@ public class RateLimiterService implements RateLimiter {
             // Same we can do for RateLimitRuleRegistry.
         }, intervalInNanos, intervalInNanos, java.util.concurrent.TimeUnit.NANOSECONDS);
     }
+
+    public static Builder builder(){
+        return new Builder();
+    }
+
+     public static class Builder {
+
+        private RateLimitRuleRegistry ruleRegistry;
+        private LimiterRegistry limiterRegistry;
+        private ScheduledExecutorService evictionScheduler;
+        private long evictionIntervalInNanos;
+        private Algorithm algorithm;
+
+        public static Builder newBuilder() {
+            return new Builder();
+        }
+        public Builder ruleRegistry(RateLimitRuleRegistry ruleRegistry) {
+            this.ruleRegistry = ruleRegistry;
+            return this;
+        }
+
+        public Builder limiterRegistry(LimiterRegistry limiterRegistry) {
+            this.limiterRegistry = limiterRegistry;
+            return this;
+        }
+
+        public Builder evictionScheduler(ScheduledExecutorService evictionScheduler) {
+            this.evictionScheduler = evictionScheduler;
+            return this;
+        }
+
+        public Builder evictionIntervalInNanos(long evictionIntervalInNanos) {
+            this.evictionIntervalInNanos = evictionIntervalInNanos;
+            return this;
+        }
+
+        public Builder algorithm(Algorithm algorithm) {
+            this.algorithm = algorithm;
+            return this;
+        }
+
+        public RateLimiterService build() {
+            if (ruleRegistry == null) throw new IllegalStateException("ruleRegistry must be set");
+            if (limiterRegistry == null) throw new IllegalStateException("limiterRegistry must be set");
+            if (evictionScheduler == null) throw new IllegalStateException("evictionScheduler must be set");
+            if (algorithm == null) throw new IllegalStateException("algorithm must be set");
+            return new RateLimiterService(ruleRegistry, limiterRegistry, evictionScheduler, evictionIntervalInNanos, algorithm);
+        }
+    }
 }
