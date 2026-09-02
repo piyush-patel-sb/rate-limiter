@@ -1,0 +1,7 @@
+package com.piyush.ratelimiter.rule;
+
+public interface RateLimitRuleRegistry {
+    RateLimitRule addRateLimitRule(String clientId, RateLimitRule rule);
+    RateLimitRule getRateLimitRule(String clientId);
+    RateLimitRule removeRateLimitRule(String clientId);
+}
