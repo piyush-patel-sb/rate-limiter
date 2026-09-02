@@ -2,7 +2,7 @@ package com.piyush.ratelimiter.rule;
 
 import java.time.Duration;
 
-public record RateLimitRule(long permits, Duration period) {
+public record RateLimitRule(long permits, Duration period, long lastUpdatedOnInMillis) {
 
     public RateLimitRule {
         if (permits <= 0) {
@@ -14,6 +14,6 @@ public record RateLimitRule(long permits, Duration period) {
     }
 
     public static RateLimitRule of(long permits, Duration period) {
-        return new RateLimitRule(permits, period);
+        return new RateLimitRule(permits, period, System.currentTimeMillis());
     }
 }

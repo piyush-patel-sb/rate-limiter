@@ -1,13 +1,13 @@
 package com.piyush.ratelimiter.demo;
 
 import com.piyush.ratelimiter.RateLimiterService;
-import com.piyush.ratelimiter.rule.InMemoryRateLimitRuleRegistry;
+import com.piyush.ratelimiter.limiter.registry.InMemoryLimiterRegistry;
+import com.piyush.ratelimiter.limiter.registry.LimiterRegistry;
+import com.piyush.ratelimiter.rule.registry.InMemoryRateLimitRuleRegistry;
 import com.piyush.ratelimiter.rule.RateLimitRule;
-import com.piyush.ratelimiter.rule.RateLimitRuleRegistry;
+import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Demo {
 
@@ -16,14 +16,20 @@ public class Demo {
     public static void main(String[] args) {
         logger.log(System.Logger.Level.INFO, "Hello, Rate Limiter!");
 
-        RateLimitRuleRegistry rateLimitRuleRegistry = new InMemoryRateLimitRuleRegistry();
+        LimiterRegistry limiterRegistry = new InMemoryLimiterRegistry(Integer.MAX_VALUE);
+
+        RateLimitRuleRegistry rateLimitRuleRegistry = new InMemoryRateLimitRuleRegistry(limiterRegistry);
         loadRateLimitRuleMap(rateLimitRuleRegistry);
 
-        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry);
+        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry);
 
         for (int i = 0; i < 15; i++) {
-            boolean allowed = rateLimiterService.allowRequest("client"+((i % 3) + 1));
-            logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 3) + 1) + " allowed: " + allowed);
+            try{
+                boolean allowed = rateLimiterService.allowRequest("client"+((i % 4) + 1));
+                logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: " + allowed);
+            }catch (IllegalArgumentException e){
+                logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: false");
+            }
         }
     }
 
