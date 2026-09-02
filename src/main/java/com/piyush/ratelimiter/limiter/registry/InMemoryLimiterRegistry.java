@@ -37,4 +37,9 @@ public class InMemoryLimiterRegistry implements LimiterRegistry {
     public Limiter removeLimiter(String clientId) {
         return limiters.remove(clientId);
     }
+
+    @Override
+    public Map<String, Limiter> getAllLimiters() {
+        return limiters;
+    }
 }

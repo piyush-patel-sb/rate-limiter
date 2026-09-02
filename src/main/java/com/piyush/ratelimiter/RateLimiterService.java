@@ -6,14 +6,19 @@ import com.piyush.ratelimiter.limiter.strategy.TokenBucketLimiterStrategy;
 import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 public class RateLimiterService implements RateLimiter {
 
     private final RateLimitRuleRegistry ruleRegistry;
     private final LimiterRegistry limiterRegistry;
+    private final ScheduledExecutorService evictionScheduler;
 
-    public RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry) {
+    public RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry, ScheduledExecutorService evictionScheduler, long evictionIntervalInNanos) {
         this.ruleRegistry = ruleRegistry;
         this.limiterRegistry = limiterRegistry;
+        this.evictionScheduler = evictionScheduler;
+        startEvictionTask(evictionIntervalInNanos);
     }
 
     @Override
@@ -39,5 +44,17 @@ public class RateLimiterService implements RateLimiter {
             limiterRegistry.addLimiter(clientId, limiter);
         }
         return limiter;
+    }
+
+    private void startEvictionTask(long intervalInNanos) {
+        evictionScheduler.scheduleAtFixedRate(() -> {
+            long currentNanoTime = System.nanoTime();
+            limiterRegistry.getAllLimiters().forEach((clientId, limiter) -> {
+                if (currentNanoTime - limiter.getLastRequestTimeInNano() > intervalInNanos) {
+                    limiterRegistry.removeLimiter(clientId);
+                }
+            });
+            // Same we can do for RateLimitRuleRegistry.
+        }, intervalInNanos, intervalInNanos, java.util.concurrent.TimeUnit.NANOSECONDS);
     }
 }

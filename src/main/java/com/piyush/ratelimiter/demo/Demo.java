@@ -8,6 +8,8 @@ import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
 import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class Demo {
 
@@ -21,7 +23,13 @@ public class Demo {
         RateLimitRuleRegistry rateLimitRuleRegistry = new InMemoryRateLimitRuleRegistry(limiterRegistry);
         loadRateLimitRuleMap(rateLimitRuleRegistry);
 
-        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry);
+        ScheduledExecutorService evictionScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread daemon = new Thread(runnable, "eviction-scheduler");
+            daemon.setDaemon(true);
+            return daemon;
+        });
+
+        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry, evictionScheduler, Duration.ofMinutes(1).toNanos());
 
         for (int i = 0; i < 15; i++) {
             try{
