@@ -2,7 +2,8 @@ package com.piyush.ratelimiter;
 
 import com.piyush.ratelimiter.limiter.Limiter;
 import com.piyush.ratelimiter.limiter.registry.LimiterRegistry;
-import com.piyush.ratelimiter.limiter.strategy.TokenBucketLimiterStrategy;
+import com.piyush.ratelimiter.limiter.strategy.Algorithm;
+import com.piyush.ratelimiter.limiter.strategy.LimiterStrategyFactory;
 import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
@@ -13,11 +14,13 @@ public class RateLimiterService implements RateLimiter {
     private final RateLimitRuleRegistry ruleRegistry;
     private final LimiterRegistry limiterRegistry;
     private final ScheduledExecutorService evictionScheduler;
+    private final Algorithm algorithm;
 
-    public RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry, ScheduledExecutorService evictionScheduler, long evictionIntervalInNanos) {
+    public RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry, ScheduledExecutorService evictionScheduler, long evictionIntervalInNanos, Algorithm algorithm) {
         this.ruleRegistry = ruleRegistry;
         this.limiterRegistry = limiterRegistry;
         this.evictionScheduler = evictionScheduler;
+        this.algorithm = algorithm;
         startEvictionTask(evictionIntervalInNanos);
     }
 
@@ -40,7 +43,7 @@ public class RateLimiterService implements RateLimiter {
             if (rule == null) {
                 throw new IllegalArgumentException("Rate limit rule not found for clientId: " + clientId);
             }
-            limiter = new Limiter(rule, new TokenBucketLimiterStrategy(), currentNanoTime);
+            limiter = new Limiter(rule, LimiterStrategyFactory.createLimiterStrategy(algorithm, rule), currentNanoTime);
             limiterRegistry.addLimiter(clientId, limiter);
         }
         return limiter;

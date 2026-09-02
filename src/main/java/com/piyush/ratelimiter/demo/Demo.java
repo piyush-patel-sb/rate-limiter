@@ -3,6 +3,7 @@ package com.piyush.ratelimiter.demo;
 import com.piyush.ratelimiter.RateLimiterService;
 import com.piyush.ratelimiter.limiter.registry.InMemoryLimiterRegistry;
 import com.piyush.ratelimiter.limiter.registry.LimiterRegistry;
+import com.piyush.ratelimiter.limiter.strategy.Algorithm;
 import com.piyush.ratelimiter.rule.registry.InMemoryRateLimitRuleRegistry;
 import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
@@ -29,7 +30,7 @@ public class Demo {
             return daemon;
         });
 
-        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry, evictionScheduler, Duration.ofMinutes(1).toNanos());
+        RateLimiterService rateLimiterService = new RateLimiterService(rateLimitRuleRegistry, limiterRegistry, evictionScheduler, Duration.ofMinutes(1).toNanos(), Algorithm.FIXED_WINDOW);
 
         for (int i = 0; i < 15; i++) {
             try{
