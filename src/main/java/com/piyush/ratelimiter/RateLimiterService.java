@@ -50,7 +50,7 @@ public class RateLimiterService implements RateLimiter {
                 throw new IllegalArgumentException("Rate limit rule not found for clientId: " + clientId);
             }
             limiter = new Limiter(rule, LimiterStrategyFactory.createLimiterStrategy(algorithm, rule), currentNanoTime);
-            limiterRegistry.addLimiter(clientId, limiter);
+            limiter = limiterRegistry.addLimiter(clientId, limiter);
         }
         return limiter;
     }
