@@ -10,7 +10,7 @@ import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class RateLimiterService implements RateLimiter {
+public class RateLimiterService implements RateLimiter, AutoCloseable {
 
     private final RateLimitRuleRegistry ruleRegistry;
     private final LimiterRegistry limiterRegistry;
@@ -30,6 +30,10 @@ public class RateLimiterService implements RateLimiter {
         startEvictionTask(evictionIntervalInNanos);
     }
 
+    public static Builder builder(){
+        return new Builder();
+    }
+
     @Override
     public boolean allowRequest(String clientId) {
         if(clientId == null || clientId.isBlank()) {
@@ -40,6 +44,11 @@ public class RateLimiterService implements RateLimiter {
         Limiter limiter = getLimiterForClient(clientId, currentNanoTime);
         limiter.touch(currentNanoTime);
         return limiter.getLimiterStrategy().tryAcquire(currentNanoTime);
+    }
+
+    @Override
+    public void close() throws Exception {
+        evictionScheduler.shutdownNow();
     }
 
     private Limiter getLimiterForClient(String clientId, long currentNanoTime) {
@@ -67,11 +76,7 @@ public class RateLimiterService implements RateLimiter {
         }, intervalInNanos, intervalInNanos, java.util.concurrent.TimeUnit.NANOSECONDS);
     }
 
-    public static Builder builder(){
-        return new Builder();
-    }
-
-     public static class Builder {
+    public static class Builder {
 
         private RateLimitRuleRegistry ruleRegistry;
         private LimiterRegistry limiterRegistry;

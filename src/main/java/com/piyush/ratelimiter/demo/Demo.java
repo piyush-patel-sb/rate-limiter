@@ -9,8 +9,6 @@ import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
 import java.time.Duration;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class Demo {
 
@@ -24,20 +22,23 @@ public class Demo {
         RateLimitRuleRegistry rateLimitRuleRegistry = new InMemoryRateLimitRuleRegistry(limiterRegistry);
         loadRateLimitRuleMap(rateLimitRuleRegistry);
 
-        RateLimiterService rateLimiterService = RateLimiterService.builder()
+        try(RateLimiterService rateLimiterService = RateLimiterService.builder()
                                                         .ruleRegistry(rateLimitRuleRegistry)
                                                         .limiterRegistry(limiterRegistry)
                                                         .evictionIntervalInNanos(Duration.ofMinutes(1).toNanos())
                                                         .algorithm(Algorithm.FIXED_WINDOW)
-                                                        .build();
+                                                        .build()) {
 
-        for (int i = 0; i < 15; i++) {
-            try{
-                boolean allowed = rateLimiterService.allowRequest("client"+((i % 4) + 1));
-                logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: " + allowed);
-            }catch (IllegalArgumentException e){
-                logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: false");
+            for (int i = 0; i < 15; i++) {
+                try{
+                    boolean allowed = rateLimiterService.allowRequest("client"+((i % 4) + 1));
+                    logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: " + allowed);
+                }catch (IllegalArgumentException e){
+                    logger.log(System.Logger.Level.INFO, "Request " + (i + 1) + " for client" + ((i % 4) + 1) + " allowed: false");
+                }
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
