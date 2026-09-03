@@ -8,7 +8,7 @@ public record RateLimitRule(int limit, Duration period, long lastUpdatedOnInMill
         if (limit <= 0) {
             throw new IllegalArgumentException("limit must be positive, got " + limit);
         }
-        if (period.isNegative() || period.isZero()) {
+        if (period == null || period.isNegative() || period.isZero()) {
             throw new IllegalArgumentException("period must be positive, got " + period);
         }
     }
