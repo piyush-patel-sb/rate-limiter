@@ -7,6 +7,7 @@ import com.piyush.ratelimiter.limiter.strategy.LimiterStrategyFactory;
 import com.piyush.ratelimiter.rule.RateLimitRule;
 import com.piyush.ratelimiter.rule.registry.RateLimitRuleRegistry;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 public class RateLimiterService implements RateLimiter {
@@ -16,11 +17,16 @@ public class RateLimiterService implements RateLimiter {
     private final ScheduledExecutorService evictionScheduler;
     private final Algorithm algorithm;
 
-    public RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry, ScheduledExecutorService evictionScheduler, long evictionIntervalInNanos, Algorithm algorithm) {
+    private RateLimiterService(RateLimitRuleRegistry ruleRegistry, LimiterRegistry limiterRegistry, long evictionIntervalInNanos, Algorithm algorithm) {
         this.ruleRegistry = ruleRegistry;
         this.limiterRegistry = limiterRegistry;
-        this.evictionScheduler = evictionScheduler;
         this.algorithm = algorithm;
+        evictionScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
+            Thread daemon = new Thread(runnable);
+            daemon.setDaemon(true);
+            daemon.setName("eviction-scheduler");
+            return daemon;
+        });
         startEvictionTask(evictionIntervalInNanos);
     }
 
@@ -86,11 +92,6 @@ public class RateLimiterService implements RateLimiter {
             return this;
         }
 
-        public Builder evictionScheduler(ScheduledExecutorService evictionScheduler) {
-            this.evictionScheduler = evictionScheduler;
-            return this;
-        }
-
         public Builder evictionIntervalInNanos(long evictionIntervalInNanos) {
             this.evictionIntervalInNanos = evictionIntervalInNanos;
             return this;
@@ -104,9 +105,9 @@ public class RateLimiterService implements RateLimiter {
         public RateLimiterService build() {
             if (ruleRegistry == null) throw new IllegalStateException("ruleRegistry must be set");
             if (limiterRegistry == null) throw new IllegalStateException("limiterRegistry must be set");
-            if (evictionScheduler == null) throw new IllegalStateException("evictionScheduler must be set");
+            if (evictionIntervalInNanos <= 0) throw new IllegalStateException("evictionIntervalInNanos must be positive");
             if (algorithm == null) throw new IllegalStateException("algorithm must be set");
-            return new RateLimiterService(ruleRegistry, limiterRegistry, evictionScheduler, evictionIntervalInNanos, algorithm);
+            return new RateLimiterService(ruleRegistry, limiterRegistry, evictionIntervalInNanos, algorithm);
         }
     }
 }

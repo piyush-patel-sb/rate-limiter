@@ -24,16 +24,9 @@ public class Demo {
         RateLimitRuleRegistry rateLimitRuleRegistry = new InMemoryRateLimitRuleRegistry(limiterRegistry);
         loadRateLimitRuleMap(rateLimitRuleRegistry);
 
-        ScheduledExecutorService evictionScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            Thread daemon = new Thread(runnable, "eviction-scheduler");
-            daemon.setDaemon(true);
-            return daemon;
-        });
-
         RateLimiterService rateLimiterService = RateLimiterService.builder()
                                                         .ruleRegistry(rateLimitRuleRegistry)
                                                         .limiterRegistry(limiterRegistry)
-                                                        .evictionScheduler(evictionScheduler)
                                                         .evictionIntervalInNanos(Duration.ofMinutes(1).toNanos())
                                                         .algorithm(Algorithm.FIXED_WINDOW)
                                                         .build();
