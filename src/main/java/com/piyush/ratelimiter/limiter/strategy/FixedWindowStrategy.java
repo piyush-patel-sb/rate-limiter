@@ -10,8 +10,20 @@ public class FixedWindowStrategy implements LimiterStrategy {
     private int windowId;
 
     public FixedWindowStrategy(int limit, Duration window) {
+
+        if (limit <= 0) {
+            throw new IllegalArgumentException("Limit should be non-negative");
+        }
         this.limit = limit;
-        this.window = (window.getNano()==0) ? Duration.ofNanos(1L) : window;
+
+        if (window == null) {
+            throw new IllegalArgumentException("Window duration cannot be null");
+        }
+        if (window.isNegative() || window.isZero()) {
+            throw new IllegalArgumentException("Window duration must be positive");
+        }
+        this.window = window;
+
         this.remainingLimit = limit;
         this.windowId = 0;
     }
