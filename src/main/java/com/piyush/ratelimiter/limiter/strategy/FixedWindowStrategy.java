@@ -6,6 +6,8 @@ public class FixedWindowStrategy implements LimiterStrategy {
 
     private final int limit;
     private final Duration window;
+
+    private final Object lock = new Object();
     private int remainingLimit;
     private int windowId;
 
@@ -30,19 +32,20 @@ public class FixedWindowStrategy implements LimiterStrategy {
 
     @Override
     public boolean tryAcquire(long currentNanos) {
+        synchronized (lock) {
+            int windowId = (int)(currentNanos / window.toNanos());
 
-        int windowId = (int)(currentNanos / window.toNanos());
+            if(this.windowId != windowId) {
+                remainingLimit = limit;
+                this.windowId = windowId;
+            }
 
-        if(this.windowId != windowId) {
-            remainingLimit = limit;
-            this.windowId = windowId;
+            if (remainingLimit <= 0) {
+                return false;
+            }
+
+            remainingLimit--;
+            return true;
         }
-
-        if (remainingLimit <= 0) {
-            return false;
-        }
-
-        remainingLimit--;
-        return true;
     }
 }
